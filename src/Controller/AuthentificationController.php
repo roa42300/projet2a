@@ -12,38 +12,65 @@ use App\Entity\Utilisateur;
 class AuthentificationController extends AbstractController
 {
     /**
-	*Route("/authentification", name="authentification")
-    */
+	 * @Route("/authentification", name="authentification")
+     */
 	public function index(): Response
     {
         return $this->render('authentification/index.html.twig', [
             'controller_name' => 'AuthentificationController',
         ]);
     }
-	 /**
-	*Route("/inserUser", name="inserUser")
-    */
-    public function inserUser(): Response
+    public function insertUserBdd(Request $request, EntityManagerInterface $manager): Response
     {
-        return $this->render('authentification/inserUser.html.twig', [
-            'controller_name' => "Insertion d'un nouvel Utilisateur",
+        $User = new Utilisateur();
+        $User->setNom($request->request->get('nom'));
+        $User->setPrenom($request->request->get('prenom'));
+        $User->setCode($request->request->get('code'));
+        $User->setSalt($request->request->get('salt'));
+
+        $manager->persist($User);
+        $manager->flush();
+
+
+        return $this->render('authentification/insertUser.html.twig', [
+            'controller_name' => "Ajout en base de données.",
         ]);
     }
 	 /**
-	*Route("/inserUserBdd", name="inserUserBdd")
-    */
-    public function insertUserBdd(Request $request, EntityManagerInterface $manager): Response
+	  * @Route("/connexion", name ="connexion")
+      */
+    public function connexion(Request $request,
+                              EntityManagerInterface $manager): Response
     {
-		$User = new Utilisateur();
-		$User->setNom($request->request->get('nom'));
-		$User->setPrenom($request->request->get('prenom'));
-		$User->setCode($request->request->get('code'));
-		$User->setSalt($request->request->get('salt'));
+        //Récupération des identifiants de connexion
+        $identifiant = $request->request->get('login');
+        $password = $request->request->get('password');
+        //Test de l'existence d'un tel couple
+        $aUser = $manager->getRepository(Utilisateur::class)->findBy(["nom" => $identifiant, "code" => $password]);
+        if (sizeof($aUser)>0){
+            $utilisateur = new Utilisateur;
+            $utilisateur = $aUser[0];
+//démarrage des variables de session
+            $sess = $request->getSession();
+//Information de session
+            $sess->set("idUtilisateur", $utilisateur->getId());
+            $sess->set("nomUtilisateur", $utilisateur->getNom());
+            $sess->set("prenomUtilisateur", $utilisateur->getPrenom());
 
-		$manager->persist($User);
-		$manager->flush();
-        return $this->render('authentification/inserUser.html.twig', [
-            'controller_name' => "Insertion d'un nouvel Utilisateur",
+            return $this->redirectToRoute('dashboard');
+        }else{
+            return $this->redirectToRoute('authentification');
+        }
+    }
+
+        /**
+         * @Route("/dashboard", name ="dashboard")
+         */
+    public function dashboard(Request $request, EntityManagerInterface $manager): Response
+    {
+        $sess = $request->getSession();
+        return $this->render('authentification/dashboard.html.twig',[
+            'controller_name' => "Espace Client",
         ]);
     }
 }
