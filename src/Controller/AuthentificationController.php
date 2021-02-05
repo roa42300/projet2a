@@ -20,6 +20,19 @@ class AuthentificationController extends AbstractController
             'controller_name' => 'AuthentificationController',
         ]);
     }
+    /**
+     * @Route("/insertUser", name="insertUser")
+     */
+    public function insertUser(): Response
+    {
+        return $this->render('authentification/insertUser.html.twig', [
+            'controller_name' => "Insertion d'un nouvel Utilisateur",
+        ]);
+    }
+
+    /**
+     * @Route("/insertUserBdd", name="insertUserBdd")
+     */
     public function insertUserBdd(Request $request, EntityManagerInterface $manager): Response
     {
         $User = new Utilisateur();
@@ -39,8 +52,7 @@ class AuthentificationController extends AbstractController
 	 /**
 	  * @Route("/connexion", name ="connexion")
       */
-    public function connexion(Request $request,
-                              EntityManagerInterface $manager): Response
+    public function connexion(Request $request, EntityManagerInterface $manager): Response
     {
         //Récupération des identifiants de connexion
         $identifiant = $request->request->get('login');
