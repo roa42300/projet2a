@@ -49,6 +49,19 @@ class AuthentificationController extends AbstractController
             'controller_name' => "Ajout en base de données.",
         ]);
     }
+    /**
+     * @Route("/listeUser", name="listeUser")
+     */
+    public function listeUser(Request $request, EntityManagerInterface $manager): Response
+    {
+//Requête qui récupère la liste des Users
+        $listeUser = $manager->getRepository(Utilisateur::class)->findAll();
+
+        return $this->render('authentification/listeUser.html.twig', [
+            'controller_name' => "Liste des Utilisateurs",
+            'listeUser' => $listeUser,
+        ]);
+    }
 	 /**
 	  * @Route("/connexion", name ="connexion")
       */
@@ -73,6 +86,18 @@ class AuthentificationController extends AbstractController
         }else{
             return $this->redirectToRoute('authentification');
         }
+    }
+
+    /**
+     * @Route("/deleteUser/{id}", name ="deleteUser")
+     */
+    public function deleteUser(Request $request, EntityManagerInterface $manager, Utilisateur $id): Response
+    {
+
+        $manager->remove($id);
+        $manager->flush();
+
+        return $this->redirectToRoute('listeUser');
     }
 
         /**
