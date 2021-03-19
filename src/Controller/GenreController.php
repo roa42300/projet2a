@@ -7,6 +7,7 @@ namespace App\Controller;
     use Doctrine\ORM\EntityManagerInterface;
     use Symfony\Component\HttpFoundation\Request;
     use App\Entity\Genre;
+    use App\Entity\Documents;
 
 class GenreController extends AbstractController
 {
@@ -31,6 +32,19 @@ class GenreController extends AbstractController
     }
 
     /**
+     * @Route("/listeGenre", name="listeGenre")
+     */
+    public function listeGenre(Request $request, EntityManagerInterface $manager): Response
+    {
+        //Requête qui récupère la liste des Users
+        $listeGenre = $manager->getRepository(Genre::class)->findAll();
+        return $this->render('genre/listeGenre.html.twig', [
+            'controller_name' => "Liste des genres",
+            'listeGenre' => $listeGenre,
+        ]);
+    }
+
+    /**
      * @Route("/insertGenreBdd", name="insertGenreBdd")
      */
     public function insertGenreBdd(Request $request, EntityManagerInterface $manager): Response
@@ -45,14 +59,23 @@ class GenreController extends AbstractController
             'controller_name' => "Ajout en base de données.",
         ]);
     }
+
     /**
      * @Route("/deleteGenre/{id}", name="deleteGenre")
      */
     public function deleteGenre(Request $request, EntityManagerInterface $manager, Genre $id): Response
     {
-
-        $manager->remove($id);
-        $manager->flush();
+//Vérifier que le genre n'est pas utilisé.
+        $testGenre = $manager->getRepository(Document::class)->findByTypeId($id->getId());
+        if ($testGenre) {
+            $this->addFlash(
+                'notice',
+                'Ce genre ne peut pas être supprimé'
+            );
+        } else {
+            $manager->remove($id);
+            $manager->flush();
+        }
 
         return $this->redirectToRoute('listeGenre');
     }

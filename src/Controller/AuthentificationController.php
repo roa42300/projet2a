@@ -8,6 +8,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use App\Entity\Utilisateur;
+use App\Entity\Access;
 
 class AuthentificationController extends AbstractController
 {
@@ -106,8 +107,31 @@ class AuthentificationController extends AbstractController
     public function dashboard(Request $request, EntityManagerInterface $manager): Response
     {
         $sess = $request->getSession();
-        return $this->render('authentification/dashboard.html.twig',[
-            'controller_name' => "Espace Client",
-        ]);
+        if($sess->get("idUtilisateur")){
+//Récupération du noombre de document
+            $listeDocuments = $manager->getRepository(Access::class)->findByUtilisateurId($sess->get("idUtilisateur"));
+            $nbDocument = 0;
+            foreach($listeDocuments as $val){
+                $nbDocument++;
+            }
+            return $this->render('authentification/dashboard.html.twig',[
+                'controller_name' => "Espace Client",
+                'nb_document' => $nbDocument
+            ]);
+        }else{
+            return $this->redirectToRoute('authentification');
+        }
+    }
+    /**
+     * @Route("/logout", name ="logout")
+     */
+    public function logout(Request $request, EntityManagerInterface $manager): Response
+    {
+        $sess = $request->getSession();
+        $sess->remove("idUtilisateur");
+        $sess->invalidate();
+        $sess->clear();
+        $sess=$request->getSession()->clear();
+        return $this->redirectToRoute('authentification');
     }
 }
